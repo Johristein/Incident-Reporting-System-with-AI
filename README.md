@@ -13,6 +13,7 @@ IRSWA/
 ├── IRSINTER.html           # Simple frontend UI
 ├── airs_report.py          # Incident object, export logic
 ├── IRSWA.ipynb             # Training pipeline for all models
+├── requirements.txt        # important libraries
 └── Incident_dataset.csv    # Input dataset for training
 ```
 
