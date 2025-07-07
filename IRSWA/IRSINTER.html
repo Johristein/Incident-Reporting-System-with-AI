@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AIRS Interface</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; max-width: 600px; margin: auto; }
+    input, select, button { padding: 0.5em; margin: 0.5em 0; width: 100%; }
+    pre { background: #f4f4f4; padding: 1em; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+  <h2>AIRS Attack Analyzer</h2>
+
+  <label for="model">Select AI Model:</label>
+  <select id="model">
+    <option value="ann">ANN</option>
+    <option value="xgb">xgboost</option>
+    <option value="lr">logistic</option>
+    <option value="rf">random forest</option>
+  </select>
+
+  <label for="attack">Enter attack/event:</label>
+  <input type="text" id="attack" placeholder="e.g., SQL Injection on port 3306">
+
+  <button onclick="analyze()">Analyze</button>
+
+  <h3>Prediction Log:</h3>
+  <pre id="output">Waiting for input...</pre>
+  <button onclick="downloadCSV()">Download CSV</button>
+  <button onclick="downloadJSON()">Download JSON</button>
+
+  <script>
+    let lastResult = null;
+
+    async function analyze() {
+      const model = document.getElementById("model").value;
+      const input = document.getElementById("attack").value;
+
+      const response = await fetch("http://localhost:8000/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: model, message: input })
+      });
+
+      const result = await response.json();
+      lastResult = result;
+
+      document.getElementById("output").textContent =
+        `Model Used: ${result.model_used}
+Attack Type: ${result.attack_type}
+Severity: ${result.severity}
+Status: ${result.status}
+Timestamp: ${result.timestamp}`;
+    }
+
+    function downloadCSV() {
+      if (!lastResult) return alert("Run an analysis first!");
+      const headers = Object.keys(lastResult).join(",");
+      const values = Object.values(lastResult).join(",");
+      const csvContent = `${headers}\n${values}`;
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "analysis.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadJSON() {
+      if (!lastResult) return alert("Run an analysis first!");
+      const jsonStr = JSON.stringify(lastResult, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "analysis.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+
+</body>
+</html>
